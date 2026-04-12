@@ -9,8 +9,16 @@ from .generator import (
     generate_image,
     get_runtime_status,
 )
-from .preprocess import PreprocessResult, preprocess_image
-from .prompts import SHARED_NEGATIVE_PROMPT, build_prompt, list_styles
+from .prompts import (
+    ROOM_PROMPTS,
+    ROOM_TYPES,
+    SHARED_NEGATIVE_PROMPT,
+    STYLES,
+    STYLE_PROMPTS,
+    build_prompt,
+    list_room_types,
+    list_styles,
+)
 
 __all__ = [
     "ControlNetSDXLGenerator",
@@ -19,10 +27,27 @@ __all__ = [
     "ModelConfig",
     "PreprocessResult",
     "RuntimeConfig",
+    "ROOM_PROMPTS",
+    "ROOM_TYPES",
     "SHARED_NEGATIVE_PROMPT",
+    "STYLES",
+    "STYLE_PROMPTS",
     "build_prompt",
     "generate_image",
     "get_runtime_status",
+    "list_room_types",
     "list_styles",
     "preprocess_image",
 ]
+
+
+def __getattr__(name: str):
+    if name in {"PreprocessResult", "preprocess_image"}:
+        from .preprocess import PreprocessResult, preprocess_image
+
+        return {
+            "PreprocessResult": PreprocessResult,
+            "preprocess_image": preprocess_image,
+        }[name]
+
+    raise AttributeError(f"module 'app.pipeline' has no attribute {name!r}")

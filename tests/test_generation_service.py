@@ -29,7 +29,7 @@ class GenerationServiceTests(unittest.TestCase):
             ):
                 with self.assertLogs("backend.app.generation_service", level="INFO") as captured_logs:
                     with self.assertRaises(GenerationUnavailableError):
-                        generate_renovation(image_path, "modern")
+                        generate_renovation(image_path, "Living Room", "Modern Luxury")
 
         log_output = "\n".join(captured_logs.output)
         self.assertIn("Entering generation", log_output)
@@ -47,7 +47,8 @@ class GenerationServiceTests(unittest.TestCase):
             Image.new("RGB", (256, 192), color="gray").save(output_path)
 
             fake_generation_result = SimpleNamespace(
-                style="modern",
+                room_type="Living Room",
+                style="Modern Luxury",
                 output_image_path=output_path,
             )
 
@@ -56,9 +57,11 @@ class GenerationServiceTests(unittest.TestCase):
                 return_value=fake_generation_result,
             ):
                 with self.assertLogs("backend.app.generation_service", level="INFO") as captured_logs:
-                    result = generate_renovation(image_path, "modern")
+                    result = generate_renovation(image_path, "Living Room", "Modern Luxury")
 
         self.assertEqual(result.generation_mode, "real")
+        self.assertEqual(result.room_type, "Living Room")
+        self.assertEqual(result.style, "Modern Luxury")
         self.assertEqual(result.artifacts.output_image_path, output_path)
         self.assertIn(f"Output file path: {output_path}", "\n".join(captured_logs.output))
 
@@ -77,4 +80,4 @@ class GenerationServiceTests(unittest.TestCase):
                     GenerationUnavailableError,
                     "Generated image appears blank or nearly black",
                 ):
-                    generate_renovation(image_path, "modern")
+                    generate_renovation(image_path, "Living Room", "Modern Luxury")

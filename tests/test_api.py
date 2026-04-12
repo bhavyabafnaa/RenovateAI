@@ -53,7 +53,8 @@ class ApiTests(unittest.TestCase):
             response.json(),
             {
                 "status": "ok",
-                "styles": ["modern", "scandinavian", "industrial"],
+                "room_types": ["Living Room", "Bedroom", "Kitchen"],
+                "styles": ["Modern Luxury", "Scandinavian", "Japandi", "Minimal Contemporary"],
                 "runtime": runtime,
             },
         )
@@ -84,7 +85,10 @@ class ApiTests(unittest.TestCase):
     def test_generate_requires_uploaded_image(self) -> None:
         """The generate endpoint should reject requests without an image file."""
 
-        response = self.client.post("/generate", data={"style": "modern"})
+        response = self.client.post(
+            "/generate",
+            data={"room_type": "Living Room", "style": "Modern Luxury"},
+        )
 
         self.assertEqual(response.status_code, 422)
 
@@ -94,7 +98,7 @@ class ApiTests(unittest.TestCase):
         response = self.client.post(
             "/generate",
             files={"image": ("room.png", _make_test_image_bytes(), "image/png")},
-            data={"style": "boho"},
+            data={"room_type": "Living Room", "style": "Boho"},
         )
 
         self.assertEqual(response.status_code, 400)
@@ -109,7 +113,7 @@ class ApiTests(unittest.TestCase):
         response = self.client.post(
             "/generate",
             files={"image": ("room.png", _make_test_image_bytes(), "image/png")},
-            data={"style": "modern"},
+            data={"room_type": "Living Room", "style": "Modern Luxury"},
         )
 
         self.assertEqual(response.status_code, 503)

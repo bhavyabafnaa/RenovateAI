@@ -4,7 +4,7 @@ import logging
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 
-from app.pipeline import get_runtime_status, list_styles
+from app.pipeline import get_runtime_status, list_room_types, list_styles
 
 from .file_io import save_upload_file
 from .generation_service import GenerationUnavailableError, generate_renovation, initialize_generator
@@ -31,14 +31,23 @@ def health() -> dict[str, object]:
     if runtime["require_cuda"] and not runtime["cuda_available"]:
         status = "gpu_unavailable"
 
-    return {"status": status, "styles": list_styles(), "runtime": runtime}
+    return {
+        "status": status,
+        "room_types": list_room_types(),
+        "styles": list_styles(),
+        "runtime": runtime,
+    }
 
 
 @app.post("/generate")
-async def generate(image: UploadFile = File(...), style: str = Form(...)) -> dict[str, object]:
+async def generate(
+    image: UploadFile = File(...),
+    room_type: str = Form(...),
+    style: str = Form(...),
+) -> dict[str, object]:
     try:
         saved_image_path = await save_upload_file(image)
-        result = generate_renovation(saved_image_path, style)
+        result = generate_renovation(saved_image_path, room_type, style)
     except GenerationUnavailableError as exc:
         logger.warning("Generation request failed because the real generator is unavailable.")
         raise HTTPException(status_code=503, detail=str(exc)) from exc
@@ -46,6 +55,7 @@ async def generate(image: UploadFile = File(...), style: str = Form(...)) -> dic
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     return {
+        "room_type": result.room_type,
         "style": result.style,
         "generation_mode": result.generation_mode,
         "prompt": result.prompt,

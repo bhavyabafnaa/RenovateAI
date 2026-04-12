@@ -1,4 +1,4 @@
-"""Diffusers-based ControlNet generator for renovation previews."""
+"""Diffusers-based ControlNet generator for interior concept previews."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from uuid import uuid4
 
 from PIL import Image, ImageStat
 
-from .prompts import NEGATIVE_PROMPT, build_prompt, get_style_definition
+from .prompts import NEGATIVE_PROMPT, build_prompt, normalize_room_type, normalize_style
 
 if TYPE_CHECKING:
     import torch
@@ -63,10 +63,10 @@ def _default_model_cache_dir() -> Path | None:
 
 
 GENERATION_DEFAULTS = {
-    "num_inference_steps": 30,
-    "guidance_scale": 5.0,
-    "controlnet_conditioning_scale": 0.9,
-    "strength": 0.65,
+    "num_inference_steps": 35,
+    "guidance_scale": 6.0,
+    "controlnet_conditioning_scale": 0.55,
+    "strength": 0.80,
     "guess_mode": False,
     "canny_low_threshold": 100,
     "canny_high_threshold": 200,
@@ -121,6 +121,7 @@ class GenerationResult:
     edge_map_path: Path
     prompt: str
     negative_prompt: str
+    room_type: str
     style: str
     width: int
     height: int
@@ -402,10 +403,11 @@ class ControlNetSDXLGenerator:
         self,
         input_image_path: str | Path,
         edge_map_path: str | Path,
+        room_type: str,
         style: str,
         negative_prompt: str = NEGATIVE_PROMPT,
     ) -> GenerationResult:
-        """Generate a single renovation image from the source room image and edge map."""
+        """Generate a single interior concept image from the source room image and edge map."""
 
         if self.inference_config.num_images_per_prompt != 1:
             raise ValueError("This generator currently supports exactly one output image per request.")
@@ -416,8 +418,9 @@ class ControlNetSDXLGenerator:
         torch, _, _, _ = self._import_runtime_dependencies()
         device = self._resolve_device(torch)
 
-        style_definition = get_style_definition(style)
-        prompt = build_prompt(style_definition.key)
+        canonical_room_type = normalize_room_type(room_type)
+        canonical_style = normalize_style(style)
+        prompt = build_prompt(canonical_room_type, canonical_style)
         source_image, conditioning_image, (target_width, target_height) = load_generation_images(
             input_image_path=input_image_path,
             edge_map_path=edge_map_path,
@@ -461,7 +464,7 @@ class ControlNetSDXLGenerator:
         output_image_path = save_output_image(
             image=output_image,
             output_dir=self.inference_config.output_dir,
-            style=style,
+            style=canonical_style,
             edge_map_path=edge_map_path,
         )
 
@@ -471,7 +474,8 @@ class ControlNetSDXLGenerator:
             edge_map_path=Path(edge_map_path).expanduser().resolve(),
             prompt=prompt,
             negative_prompt=negative_prompt,
-            style=style_definition.key,
+            room_type=canonical_room_type,
+            style=canonical_style,
             width=target_width,
             height=target_height,
             seed=self.inference_config.seed,
@@ -486,6 +490,7 @@ class ControlNetSDXLGenerator:
 def generate_image(
     input_image_path: str | Path,
     edge_map_path: str | Path,
+    room_type: str,
     style: str,
     model_config: ModelConfig | None = None,
     inference_config: InferenceConfig | None = None,
@@ -502,6 +507,7 @@ def generate_image(
     return generator.generate(
         input_image_path=input_image_path,
         edge_map_path=edge_map_path,
+        room_type=room_type,
         style=style,
         negative_prompt=negative_prompt,
     )

@@ -215,21 +215,23 @@ class GeneratorTests(unittest.TestCase):
                             result = generator.generate(
                                 input_image_path=input_image_path,
                                 edge_map_path=edge_map_path,
-                                style="modern",
+                                room_type="Living Room",
+                                style="Modern Luxury",
                             )
                             self.assertTrue(result.output_image_path.exists())
                             self.assertEqual(result.input_image_path, input_image_path.resolve())
                             self.assertEqual(result.edge_map_path, edge_map_path.resolve())
                             self.assertNotEqual(result.output_image_path, input_image_path.resolve())
                             self.assertNotEqual(result.output_image_path, edge_map_path.resolve())
-                            self.assertEqual(result.style, "modern")
+                            self.assertEqual(result.room_type, "Living Room")
+                            self.assertEqual(result.style, "Modern Luxury")
 
                             self.assertIsNotNone(fake_pipeline.last_kwargs)
                             assert fake_pipeline.last_kwargs is not None
-                            self.assertEqual(fake_pipeline.last_kwargs["strength"], 0.65)
-                            self.assertEqual(fake_pipeline.last_kwargs["guidance_scale"], 5.0)
-                            self.assertEqual(fake_pipeline.last_kwargs["controlnet_conditioning_scale"], 0.9)
-                            self.assertEqual(fake_pipeline.last_kwargs["num_inference_steps"], 30)
+                            self.assertEqual(fake_pipeline.last_kwargs["strength"], 0.80)
+                            self.assertEqual(fake_pipeline.last_kwargs["guidance_scale"], 6.0)
+                            self.assertEqual(fake_pipeline.last_kwargs["controlnet_conditioning_scale"], 0.55)
+                            self.assertEqual(fake_pipeline.last_kwargs["num_inference_steps"], 35)
                             self.assertEqual(
                                 fake_pipeline.last_kwargs["image"].size,
                                 fake_pipeline.last_kwargs["control_image"].size,
@@ -265,5 +267,6 @@ class GeneratorTests(unittest.TestCase):
                             generator.generate(
                                 input_image_path=input_image_path,
                                 edge_map_path=edge_map_path,
-                                style="modern",
+                                room_type="Living Room",
+                                style="Modern Luxury",
                             )

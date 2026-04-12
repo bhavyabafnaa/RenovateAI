@@ -8,7 +8,7 @@ from pathlib import Path
 
 from app.pipeline.generator import ControlNetSDXLGenerator
 from app.pipeline.preprocess import preprocess_image
-from app.pipeline.prompts import NEGATIVE_PROMPT, build_prompt
+from app.pipeline.prompts import NEGATIVE_PROMPT, build_prompt, normalize_room_type, normalize_style
 
 logger = logging.getLogger(__name__)
 _GENERATOR: ControlNetSDXLGenerator | None = None
@@ -32,6 +32,7 @@ class GenerationArtifacts:
 class GenerationResult:
     """Serializable result for the generation endpoint."""
 
+    room_type: str
     style: str
     prompt: str
     negative_prompt: str
@@ -63,14 +64,20 @@ def initialize_generator() -> ControlNetSDXLGenerator:
     return generator
 
 
-def generate_renovation(image_path: str | Path, style: str) -> GenerationResult:
-    """Run preprocessing and attempt real generation for the requested style."""
+def generate_renovation(image_path: str | Path, room_type: str, style: str) -> GenerationResult:
+    """Run preprocessing and attempt real generation for the requested interior concept."""
 
     input_image_path = Path(image_path).expanduser().resolve()
-    normalized_style = style.strip().lower()
+    canonical_room_type = normalize_room_type(room_type)
+    canonical_style = normalize_style(style)
 
-    logger.info("Entering generation for style=%s input_image=%s", normalized_style, input_image_path)
-    prompt = build_prompt(normalized_style)
+    logger.info(
+        "Entering generation for room_type=%s style=%s input_image=%s",
+        canonical_room_type,
+        canonical_style,
+        input_image_path,
+    )
+    prompt = build_prompt(canonical_room_type, canonical_style)
     preprocess_result = preprocess_image(input_image_path)
 
     generator = get_generator()
@@ -85,7 +92,8 @@ def generate_renovation(image_path: str | Path, style: str) -> GenerationResult:
         generation_result = generator.generate(
             input_image_path=input_image_path,
             edge_map_path=preprocess_result.edge_map_path,
-            style=normalized_style,
+            room_type=canonical_room_type,
+            style=canonical_style,
             negative_prompt=NEGATIVE_PROMPT,
         )
     except RuntimeError as exc:
@@ -102,6 +110,7 @@ def generate_renovation(image_path: str | Path, style: str) -> GenerationResult:
     logger.info("Output file path: %s", generation_result.output_image_path)
 
     return GenerationResult(
+        room_type=generation_result.room_type,
         style=generation_result.style,
         prompt=prompt,
         negative_prompt=NEGATIVE_PROMPT,

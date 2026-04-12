@@ -35,22 +35,22 @@ def load_image(image_path: str | Path) -> np.ndarray:
     return image
 
 
-def resize_image(image: np.ndarray, max_dimension: int = 1024) -> tuple[np.ndarray, dict[str, int | float]]:
-    """Resize an image so its longest side does not exceed ``max_dimension``."""
+def resize_image(image: np.ndarray, minimum_long_side: int = 1024) -> tuple[np.ndarray, dict[str, int | float | str]]:
+    """Upscale an image so its longest side is at least ``minimum_long_side``."""
 
-    if max_dimension <= 0:
-        raise ValueError("max_dimension must be greater than zero.")
+    if minimum_long_side <= 0:
+        raise ValueError("minimum_long_side must be greater than zero.")
 
     height, width = image.shape[:2]
     longest_side = max(height, width)
-    scale = min(1.0, max_dimension / float(longest_side))
+    scale = max(1.0, minimum_long_side / float(longest_side))
 
     if scale == 1.0:
         resized = image.copy()
     else:
         new_width = max(1, int(round(width * scale)))
         new_height = max(1, int(round(height * scale)))
-        resized = cv2.resize(image, (new_width, new_height), interpolation=cv2.INTER_AREA)
+        resized = cv2.resize(image, (new_width, new_height), interpolation=cv2.INTER_LANCZOS4)
 
     resized_height, resized_width = resized.shape[:2]
     metadata = {
@@ -59,7 +59,8 @@ def resize_image(image: np.ndarray, max_dimension: int = 1024) -> tuple[np.ndarr
         "resized_width": resized_width,
         "resized_height": resized_height,
         "scale": scale,
-        "max_dimension": max_dimension,
+        "minimum_long_side": minimum_long_side,
+        "interpolation": "lanczos",
     }
     return resized, metadata
 
@@ -99,7 +100,7 @@ def save_edge_map(edge_map: np.ndarray, source_path: str | Path, temp_root: str 
 
 def preprocess_image(
     image_path: str | Path,
-    max_dimension: int = 1024,
+    minimum_long_side: int = 1024,
     low_threshold: int = 100,
     high_threshold: int = 200,
     temp_root: str | Path | None = None,
@@ -108,7 +109,7 @@ def preprocess_image(
 
     source_path = Path(image_path).expanduser().resolve()
     image = load_image(source_path)
-    resized_image, metadata = resize_image(image, max_dimension=max_dimension)
+    resized_image, metadata = resize_image(image, minimum_long_side=minimum_long_side)
     edge_map = generate_canny_edge_map(
         resized_image,
         low_threshold=low_threshold,

@@ -10,39 +10,40 @@ import streamlit as st
 
 DEFAULT_BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 BACKEND_REQUEST_TIMEOUT = int(os.getenv("BACKEND_REQUEST_TIMEOUT", "300"))
-FALLBACK_STYLES = ["modern", "scandinavian", "industrial"]
-STYLE_LABELS = {
-    "scandinavian": "Scandinavian Minimalist",
-    "modern": "Modern Luxury",
-    "industrial": "Industrial Loft",
-}
+FALLBACK_ROOM_TYPES = ["Living Room", "Bedroom", "Kitchen"]
+FALLBACK_STYLES = ["Modern Luxury", "Scandinavian", "Japandi", "Minimal Contemporary"]
 
 
-def _format_style_label(style: str) -> str:
-    """Convert a style key into a user-facing label."""
-
-    return STYLE_LABELS.get(style, style.replace("_", " ").title())
-
-
-def fetch_available_styles(backend_url: str) -> tuple[list[str], str | None]:
-    """Fetch the supported style list from the backend health endpoint."""
+def fetch_generation_options(backend_url: str) -> tuple[list[str], list[str], str | None]:
+    """Fetch supported room type and style lists from the backend health endpoint."""
 
     try:
         response = requests.get(f"{backend_url}/health", timeout=5)
         response.raise_for_status()
         payload = response.json()
     except requests.RequestException as exc:
-        return FALLBACK_STYLES, f"Backend health check failed: {exc}"
+        return FALLBACK_ROOM_TYPES, FALLBACK_STYLES, f"Backend health check failed: {exc}"
 
+    room_types = payload.get("room_types")
     styles = payload.get("styles")
+    if not isinstance(room_types, list) or not room_types:
+        return (
+            FALLBACK_ROOM_TYPES,
+            FALLBACK_STYLES,
+            "Backend did not return a valid room type list. Using fallback options.",
+        )
     if not isinstance(styles, list) or not styles:
-        return FALLBACK_STYLES, "Backend did not return a valid style list. Using fallback styles."
+        return (
+            FALLBACK_ROOM_TYPES,
+            FALLBACK_STYLES,
+            "Backend did not return a valid style list. Using fallback options.",
+        )
 
-    return [str(style) for style in styles], None
+    return [str(room_type) for room_type in room_types], [str(style) for style in styles], None
 
 
-def request_generation(backend_url: str, uploaded_file, style: str) -> dict[str, object]:
-    """Send the uploaded image and selected style to the backend generate endpoint."""
+def request_generation(backend_url: str, uploaded_file, room_type: str, style: str) -> dict[str, object]:
+    """Send the uploaded image and selected room type/style to the backend generate endpoint."""
 
     response = requests.post(
         f"{backend_url}/generate",
@@ -53,7 +54,7 @@ def request_generation(backend_url: str, uploaded_file, style: str) -> dict[str,
                 uploaded_file.type or "image/png",
             )
         },
-        data={"style": style},
+        data={"room_type": room_type, "style": style},
         timeout=BACKEND_REQUEST_TIMEOUT,
     )
 
@@ -86,6 +87,7 @@ def render_metadata(payload: dict[str, object]) -> None:
         summary_column, paths_column = st.columns(2)
 
         with summary_column:
+            st.markdown(f"**Room Type:** `{payload.get('room_type', '-')}`")
             st.markdown(f"**Style:** `{payload.get('style', '-')}`")
             st.markdown(f"**Mode:** `{payload.get('generation_mode', '-')}`")
             preprocessing = payload.get("preprocessing")
@@ -120,19 +122,19 @@ def main() -> None:
 
     st.set_page_config(page_title="RenovateAI", layout="wide")
     st.title("RenovateAI")
-    st.caption("Upload a room image, choose a renovation style, and inspect the generation output.")
+    st.caption("Upload an empty room image, choose a room type and style, and generate an interior concept.")
 
     backend_url = st.text_input("Backend URL", value=DEFAULT_BACKEND_URL)
-    styles, style_warning = fetch_available_styles(backend_url)
-    style_options = {_format_style_label(style): style for style in styles}
+    room_types, styles, options_warning = fetch_generation_options(backend_url)
 
-    if style_warning:
-        st.warning(style_warning)
+    if options_warning:
+        st.warning(options_warning)
     else:
-        st.success("Backend is reachable and style options are synced.")
+        st.success("Backend is reachable and generation options are synced.")
 
     uploaded_file = st.file_uploader("Upload Image", type=["jpg", "jpeg", "png"])
-    selected_label = st.selectbox("Choose Style", list(style_options))
+    selected_room_type = st.selectbox("Room Type", room_types)
+    selected_style = st.selectbox("Style", styles)
 
     if st.button("Generate", type="primary"):
         if uploaded_file is None:
@@ -143,8 +145,8 @@ def main() -> None:
         status.info("Submitting image to the backend...")
 
         try:
-            with st.spinner("Running renovation pipeline..."):
-                payload = request_generation(backend_url, uploaded_file, style_options[selected_label])
+            with st.spinner("Generating interior concept..."):
+                payload = request_generation(backend_url, uploaded_file, selected_room_type, selected_style)
         except RuntimeError as exc:
             status.error(f"Generation failed: {exc}")
             return

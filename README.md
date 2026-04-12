@@ -1,6 +1,6 @@
 # RenovateAI PoC
 
-Minimal full-stack proof of concept for room renovation previews.
+Minimal full-stack proof of concept for AI interior concept previews from empty room images.
 
 ## Structure
 
@@ -20,8 +20,8 @@ requirements.txt
 ## What it does
 
 - FastAPI backend with `GET /health` and `POST /generate`
-- Streamlit frontend with image upload, style selection, generate button, and before/after display
-- Minimal image-processing pipeline that simulates generation with lightweight style transforms
+- Streamlit frontend with image upload, room type/style selection, generate button, and before/after display
+- Image preprocessing, prompt construction, and ControlNet SDXL generation orchestration for interior concepts
 
 ## Run locally
 
@@ -88,5 +88,5 @@ python -m unittest discover -s tests -v
 
 ## Notes
 
-- The current `/generate` implementation is intentionally simple and uses Pillow-based transforms as a placeholder for a future model-backed generation pipeline.
+- The current `/generate` implementation requires the configured model-backed generation pipeline.
 - No authentication, database, Docker, or background job system is included in this PoC.

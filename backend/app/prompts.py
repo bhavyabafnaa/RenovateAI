@@ -1,6 +1,8 @@
-"""Prompt helpers for style-specific generation instructions."""
+"""Compatibility prompt helpers for supported interior concept styles."""
 
 from dataclasses import dataclass
+
+from app.pipeline.prompts import STYLE_PROMPTS, STYLES, normalize_style
 
 
 @dataclass(frozen=True)
@@ -10,32 +12,17 @@ class StylePrompt:
     prompt: str
 
 
-_STYLE_PROMPTS = {
-    "modern": StylePrompt(
-        key="modern",
-        label="Modern Refresh",
-        prompt="Bright modern renovation with clean lines, natural light, and uncluttered surfaces.",
-    ),
-    "cozy": StylePrompt(
-        key="cozy",
-        label="Cozy Warmth",
-        prompt="Warm and inviting redesign with soft textures, warmer tones, and comfortable lighting.",
-    ),
-    "industrial": StylePrompt(
-        key="industrial",
-        label="Industrial Loft",
-        prompt="Industrial makeover with cool tones, sharper contrast, and a loft-inspired finish.",
-    ),
-}
-
-
 def list_styles() -> list[StylePrompt]:
-    return list(_STYLE_PROMPTS.values())
+    return [
+        StylePrompt(key=style, label=style, prompt=STYLE_PROMPTS[style])
+        for style in STYLES
+    ]
 
 
 def get_style_prompt(style: str) -> StylePrompt:
-    try:
-        return _STYLE_PROMPTS[style]
-    except KeyError as exc:
-        supported = ", ".join(sorted(_STYLE_PROMPTS))
-        raise ValueError(f"Unsupported style '{style}'. Choose from: {supported}.") from exc
+    canonical_style = normalize_style(style)
+    return StylePrompt(
+        key=canonical_style,
+        label=canonical_style,
+        prompt=STYLE_PROMPTS[canonical_style],
+    )

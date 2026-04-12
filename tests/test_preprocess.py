@@ -26,11 +26,13 @@ class PreprocessTests(unittest.TestCase):
             draw.rectangle((80, 80, 560, 400), outline="black", width=6)
             image.save(image_path)
 
-            result = preprocess_image(image_path=image_path, max_dimension=256, temp_root=temp_path)
+            result = preprocess_image(image_path=image_path, minimum_long_side=1024, temp_root=temp_path)
 
             self.assertEqual(result.source_path, image_path.resolve())
             self.assertTrue(result.temp_dir.exists())
             self.assertTrue(result.edge_map_path.exists())
             self.assertEqual(result.edge_map_path.parent, result.temp_dir)
-            self.assertLessEqual(result.metadata["resized_width"], 256)
-            self.assertLessEqual(result.metadata["resized_height"], 256)
+            self.assertEqual(result.metadata["resized_width"], 1024)
+            self.assertEqual(result.metadata["resized_height"], 768)
+            self.assertEqual(result.metadata["minimum_long_side"], 1024)
+            self.assertEqual(result.metadata["interpolation"], "lanczos")

@@ -16,43 +16,82 @@ STYLES = [
 ]
 
 BASE_PROMPT = (
-    "photorealistic interior design concept for the same empty room, designed as a "
-    "{room_type}, in {style} style, fully furnished, premium materials, elegant lighting, "
-    "professional architectural interior photography"
+    "photorealistic professionally designed interior concept for the same room, fully "
+    "furnished and professionally staged {room_type}, designed in {style} style, elegant "
+    "interior design, architectural photography"
+)
+
+LAYOUT_PROMPT = (
+    "well-composed interior layout with balanced furniture placement, realistic spatial "
+    "arrangement, furniture positioned naturally against walls or centered appropriately, "
+    "interior design composition with focal points"
+)
+
+INTERIOR_LAYOUT_DIRECTIVE = (
+    "interior staging layout with clearly visible furniture placement, primary furniture "
+    "pieces positioned naturally in the room, balanced composition with focal furniture "
+    "elements"
 )
 
 ROOM_PROMPTS = {
     "Living Room": (
-        "designer sofa, coffee table, TV wall unit, wall panels, area rug, curtains, "
-        "decorative lighting"
+        "designer sofa, elegant TV unit, media wall, coffee table, side tables, area rug, "
+        "decorative wall panels, false ceiling design, recessed ceiling lights, cove "
+        "lighting, pendant lights, curtains, stylish window treatment, decorative lamps, "
+        "wall art, indoor plants, vases, display shelves"
     ),
     "Bedroom": (
-        "queen size bed, bedside tables, wardrobe, soft lighting, curtains, wall decor"
+        "beautiful bed, upholstered headboard, bedside tables, full-height wardrobe, study "
+        "table, dressing table, vanity mirror, soft curtains, false ceiling design, warm "
+        "layered lighting, area rug, elegant bedding, wall art, indoor plants, storage "
+        "cabinets"
     ),
     "Kitchen": (
-        "modular kitchen cabinets, countertop, backsplash, storage cabinets, modern appliances"
+        "modular kitchen cabinets, upper and lower cabinets, premium countertop, backsplash "
+        "design, island counter or breakfast counter if space allows, bar stools, organized "
+        "utensils, countertop appliances, pendant lighting, under-cabinet lighting, dining "
+        "table if layout supports it"
     ),
 }
 
 STYLE_PROMPTS = {
     "Modern Luxury": (
-        "marble surfaces, warm recessed lighting, elegant wall panels, premium materials, "
-        "gold accents"
+        "marble surfaces, premium wood panels, gold accents, warm ambient lighting, elegant "
+        "textures, high-end luxury interior"
     ),
     "Scandinavian": (
-        "light oak wood, white walls, minimalist furniture, natural daylight, Nordic design"
+        "light oak wood, minimal furniture, white walls, soft daylight, nordic interior "
+        "design, cozy textures"
     ),
     "Japandi": (
-        "warm wood tones, beige palette, Japanese Scandinavian fusion, minimalist decor"
+        "warm wood tones, beige palette, japanese scandinavian fusion, minimalist decor, "
+        "natural materials"
     ),
     "Minimal Contemporary": (
-        "clean modern lines, neutral palette, sleek cabinetry, hidden lighting"
+        "clean modern lines, neutral palette, sleek furniture, minimalist design, soft "
+        "indirect lighting"
     ),
 }
 
+GLOBAL_SUFFIX = (
+    "beautifully furnished, rich decor styling, layered lighting, interior design magazine "
+    "photography, premium interior staging"
+)
+
+WIDE_ANGLE_INTERIOR_PHOTOGRAPHY = "wide-angle interior photography"
+
+FURNITURE_PRIORITY_SUFFIX = (
+    "fully furnished interior with prominent furniture pieces clearly visible, sofa, "
+    "tables, cabinetry, decor elements, layered lighting, interior magazine style staging"
+)
+
+# Backward-compatible alias for existing imports.
+GLOBAL_STAGING_SUFFIX = GLOBAL_SUFFIX
+
 NEGATIVE_PROMPT = (
-    "distorted geometry, warped walls, bad perspective, floating furniture, duplicate objects, "
-    "blurry, low resolution, cartoon style, unrealistic lighting"
+    "empty room, unfurnished room, minimal furniture, blank interior, bare interior, bare "
+    "space, unfinished room, distorted furniture, floating objects, warped walls, "
+    "unrealistic geometry, blurry, low quality"
 )
 
 # Backward-compatible alias for existing imports.
@@ -105,6 +144,9 @@ def build_prompt(room_type: str, style: str) -> str:
     )
     return (
         f"{base_prompt}, "
+        f"{INTERIOR_LAYOUT_DIRECTIVE}, "
         f"{ROOM_PROMPTS[canonical_room_type]}, "
-        f"{STYLE_PROMPTS[canonical_style]}"
+        f"{STYLE_PROMPTS[canonical_style]}, "
+        f"{FURNITURE_PRIORITY_SUFFIX}, "
+        f"{WIDE_ANGLE_INTERIOR_PHOTOGRAPHY}"
     )

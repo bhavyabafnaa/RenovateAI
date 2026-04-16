@@ -63,10 +63,10 @@ def _default_model_cache_dir() -> Path | None:
 
 
 GENERATION_DEFAULTS = {
-    "num_inference_steps": 35,
-    "guidance_scale": 6.0,
-    "controlnet_conditioning_scale": 0.55,
-    "strength": 0.80,
+    "num_inference_steps": 40,
+    "guidance_scale": 7.0,
+    "controlnet_conditioning_scale": 0.45,
+    "strength": 0.82,
     "guess_mode": False,
     "canny_low_threshold": 100,
     "canny_high_threshold": 200,

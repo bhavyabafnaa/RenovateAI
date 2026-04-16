@@ -228,10 +228,10 @@ class GeneratorTests(unittest.TestCase):
 
                             self.assertIsNotNone(fake_pipeline.last_kwargs)
                             assert fake_pipeline.last_kwargs is not None
-                            self.assertEqual(fake_pipeline.last_kwargs["strength"], 0.80)
-                            self.assertEqual(fake_pipeline.last_kwargs["guidance_scale"], 6.0)
-                            self.assertEqual(fake_pipeline.last_kwargs["controlnet_conditioning_scale"], 0.55)
-                            self.assertEqual(fake_pipeline.last_kwargs["num_inference_steps"], 35)
+                            self.assertEqual(fake_pipeline.last_kwargs["strength"], 0.82)
+                            self.assertEqual(fake_pipeline.last_kwargs["guidance_scale"], 7.0)
+                            self.assertEqual(fake_pipeline.last_kwargs["controlnet_conditioning_scale"], 0.45)
+                            self.assertEqual(fake_pipeline.last_kwargs["num_inference_steps"], 40)
                             self.assertEqual(
                                 fake_pipeline.last_kwargs["image"].size,
                                 fake_pipeline.last_kwargs["control_image"].size,
